@@ -29,6 +29,19 @@
             <InputText @bind-Value="newSong.Genre" class="mt-1 block w-full p-2 border rounded" />
         </div>
 
+        <!-- (*NEWBYME*) adding div for adding album art. File input restricted to images.
+         HandleFileSelected executes when a file is selected
+         Help from: https://stackoverflow.com/questions/78716104/troubles-with-inputfile-component-in-blazor-server-side-net-6
+         Learned about InputFile from here: https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.components.forms?view=aspnetcore-9.0 -->
+        <div class="mb-4">
+            <label class="block text-gray-200">(Optional) Upload Album Art</label>
+            <InputFile OnChange="@HandleFileSelected" class="mt-1 block w-full p-2 border-none" accept="image/*" />
+            <!-- If imageUrl has a valid value, display an image preview -->
+            @if (!string.IsNullOrEmpty(imageUrl)){
+                <img src="@imageUrl" alt="Album art preview" class="m-2 max-w-xs" />
+            }
+        </div>
+
         <button type="submit" class="bg-purple-600 text-white px-4 py-2 rounded">Add Song</button>
     </EditForm>
 
@@ -41,7 +54,36 @@
 @code {
     private Song newSong = new Song();
     private string message;
+    //(*NEWBYME*) adding string variable for the imageUrl
+    private string imageUrl = string.Empty;
 
+    //(*NEWBYME*) adding async Task for HandleFileSelected, to handle uploaded file for album Art
+    //'e' represents event arguments; the data of the onChange event
+    private async Task HandleFileSelected(InputFileChangeEventArgs e){
+        //getting the file the user picked as an IBrowserFileObject
+        var file = e.File;
+
+        /*if the file is valid, read the file into a byte array and set it to newSong.Art, 
+        and create an image preview*/
+        if(file != null){
+            //buffer for file's data
+            var buffer = new byte[file.Size];
+            //opens a stream and fills buffer with the file's bytes. 15MB limit for file size
+            try{
+                await file.OpenReadStream(maxAllowedSize: 15 * 1024 * 1024).ReadAsync(buffer);
+                newSong.Art = buffer;
+                //creating preview URL: encoding buffer to Base64 and building a data url for imageUrl
+                imageUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
+            }
+            catch(IOException ex){
+                message = "File too large: please upload an image under 15MB";
+                return;
+            }
+            
+            
+        }
+
+    }
     private async Task HandleValidSubmit()
     {
         var response = await Http.PostAsJsonAsync("api/songs", newSong);
@@ -49,6 +91,8 @@
         {
             message = "Song added successfully!";
             newSong = new Song(); 
+            //(*NEWBYME*) clearing the image preview after adding song
+            imageUrl = string.Empty;
         }
         else
         {
