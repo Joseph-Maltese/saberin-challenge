@@ -1,17 +1,30 @@
 ﻿@inherits LayoutComponentBase
-
+<!-- (*NEWBYME*) injecting NavigationManager; to make sure we are on the right
+page to show the Search bar (should only be visible on Index.razor)
+Help from here: https://www.syncfusion.com/faq/blazor/routing/how-do-you-get-the-current-url-in-a-blazor-component -->
+@inject NavigationManager NavigationManager
+<!--(*NEWBYME*) importing namespace for SearchService -->
+@using music_manager_starter.Client.Services
+<!-- (*NEWBYME*) injecting SearchService to communicate the text entered in the search bar to 
+SearchService.SearchTerm-->
+@inject SearchService SearchService
 
 <div class="flex h-screen">
     <NavMenu />
     <div class="flex-1 flex flex-col bg-gray-800 md:ml-64 transition-all duration-300">
         <div class="top-bar px-6 py-4 bg-gray-900 text-white flex items-center justify-between">
             <h1 class="text-xl font-semibold">Music</h1>
-            <div class="relative">
-                <input type="text" placeholder="Search..." class="bg-gray-700 text-white px-4 py-2 rounded-full focus:outline-none">
-                <span class="absolute right-3 top-3 text-gray-400">
-                    <i class="fas fa-search"></i>
-                </span>
-            </div>
+            <!-- (*NEWBYME*) surround this div (containing search bar) with a conditional to
+            only display it on the Index.razor (Library) screen-->
+            @if(NavigationManager.Uri.EndsWith("/")){
+                <div class="relative">
+                    <!-- (*NEWBYME*) adding @bind-value attribute to input tag, linking the input to SearchTerm-->
+                    <input type="text" @bind-value="SearchService.SearchTerm" @bind-value:event="oninput" placeholder="Search..." class="bg-gray-700 text-white px-4 py-2 rounded-full focus:outline-none">
+                    <span class="absolute right-3 top-3 text-gray-400">
+                        <i class="fas fa-search"></i>
+                    </span>
+                </div>
+            }
         </div>
 
         <div class="p-0 overflow-y-auto flex-1">

@@ -1,16 +1,29 @@
 ﻿@page "/"
 @using music_manager_starter.Shared
+<!--(*NEWBYME*) importing namespace for SearchService -->
+@using music_manager_starter.Client.Services
+<!-- (*NEWBYME*) injecting SearchService to get access to SearchService.SearchTerm and OnSearchChanged -->
+@inject SearchService SearchService
 
 @inject HttpClient Http
 
 @code {
     private List<Song> songs;
+    //(*NEWBYME*) adding Song list for filtered songs (songs to be displayed with search bar)
+    private List<Song> filteredSongs;
     //(*NEWBYME*) adding var for hoveredSongId. needs to be nullable
     private Guid? hoveredSongId;
-
+    //blazor lifecycle method; called when Index.razor is initialized
     protected override async Task OnInitializedAsync()
     {
         songs = await Http.GetFromJsonAsync<List<Song>>("api/songs");
+        //(*NEWBYME*) initialize filteredSongs with full song list
+        filteredSongs = songs;
+        /*(*NEWBYME*) add FilterSongs as listener/subscriber for OnSearchChange event. FilterSongs gets called
+        when search term updates and OnSearchChanged gets invoked in Services/SearchService.cs */
+        SearchService.OnSearchChanged += FilterSongs;
+        //(*NEWBYME*) applying initial search term in search bar
+        FilterSongs();
     }
 
     /*(*NEWBYME*) adding GetHoverStyle function to return proper background style when hovering 
@@ -22,14 +35,46 @@
         }
         return "background-color: black;";
     }
+
+    /*(*NEWBYME*) adding FilterSongs function; setting filteredSongs to contain the songs which match
+    keywords typed into search bar*/
+    private void FilterSongs(){
+        if(songs == null){
+            return;
+        }
+
+        string searchTerm = SearchService.SearchTerm.ToLower();
+
+        //if there is no text in the search bar, set filteredSongs to songs (to display all songs)
+        if(string.IsNullOrEmpty(searchTerm)){
+            filteredSongs = songs;
+        }
+        else{
+            filteredSongs = songs.Where(s =>
+                s.Title.ToLower().Contains(searchTerm) ||
+                s.Artist.ToLower().Contains(searchTerm) ||
+                s.Album.ToLower().Contains(searchTerm)                
+            ).ToList();
+        }
+        
+        //re-render ui when filteredSongs changes
+        StateHasChanged();
+    }
+
+    /*(*NEWBYME*)
+    private void Dispose(){
+        SearchService.OnSearchChanged -= FilterSongs;
+    }*/
 }
 
 <div class="p-0 min-h-screen bg-pattern flex flex-col items-center justify-center">
     <h2 class="text-3xl font-bold text-white mb-8 text-center">Song Library</h2>
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-        @if (songs != null && songs.Count > 0)
+        <!-- (*NEWBYME*) replacing songs with filteredSongs -->
+        @if (filteredSongs != null && filteredSongs.Count > 0)
         {
-            @foreach (var song in songs)
+            //(*NEWBYME*) replacing songs with filteredSongs
+            @foreach (var song in filteredSongs)
             {
                 <!-- (*NEWBYME*) editing song div to handle onmouseover and onmouseout.
                 - Id of song being hovered gets set to hoveredSongId.
