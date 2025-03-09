@@ -5,10 +5,22 @@
 
 @code {
     private List<Song> songs;
+    //(*NEWBYME*) adding var for hoveredSongId. needs to be nullable
+    private Guid? hoveredSongId;
 
     protected override async Task OnInitializedAsync()
     {
         songs = await Http.GetFromJsonAsync<List<Song>>("api/songs");
+    }
+
+    /*(*NEWBYME*) adding GetHoverStyle function to return proper background style when hovering 
+    over a song tile; either black or album art */
+    private string GetHoverStyle(Song song){
+        if(song.Art != null){
+            string base64 = Convert.ToBase64String(song.Art);
+            return $"background-image: url('data:image/jpeg;base64,{base64}'); background-size: cover; background-position: center;";
+        }
+        return "background-color: black;";
     }
 }
 
@@ -19,9 +31,25 @@
         {
             @foreach (var song in songs)
             {
-                <div class="glass p-6 border border-gray-300 rounded-lg text-white transition-transform transform hover:scale-105 hover:shadow-xl cursor-pointer">
+                <!-- (*NEWBYME*) editing song div to handle onmouseover and onmouseout.
+                - Id of song being hovered gets set to hoveredSongId.
+                - style of the div gets dynamically set, based on if it is hovered or not.
+                Without the conditional, every tile would have an art or black background constantly  -->
+                <div class="glass p-6 border border-gray-300 rounded-lg text-white transition-transform transform hover:scale-105 hover:shadow-xl cursor-pointer"
+                    @onmouseover="@(() => hoveredSongId = song.Id)"
+                    @onmouseout="@(() => hoveredSongId = null)"
+                    style="@(hoveredSongId == song.Id ? GetHoverStyle(song) : "")">
+                    
+                    <!-- song Title and Artist will always be rendered -->
                     <h3 class="text-xl font-semibold mb-2">@song.Title</h3>
                     <p class="text-md">Artist: <span class="font-light">@song.Artist</span></p>
+                
+                    <!-- (*NEWBYME*) adding if statement which will display detailed song information when
+                    song tile is hovered (only for the currently hovered tile) -->
+                    @if (hoveredSongId == song.Id){
+                        <p class="text-md">Genre: <span class="font-light">@(song.Genre)</span></p>
+                        
+                    }
 
                 </div>
             }
