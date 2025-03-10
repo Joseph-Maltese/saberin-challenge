@@ -15,8 +15,10 @@ SearchService.SearchTerm-->
         <div class="top-bar px-6 py-4 bg-gray-900 text-white flex items-center justify-between">
             <h1 class="text-xl font-semibold">Music</h1>
             <!-- (*NEWBYME*) surround this div (containing search bar) with a conditional to
-            only display it on the Index.razor (Library) screen-->
-            @if(NavigationManager.Uri.EndsWith("/")){
+            only display it on the Index.razor (Library) screen
+            (*NEWBYME*) updated if statement; checks path relative to BaseUri, instead of checking
+            if path ends with '/'. Help from: https://stackoverflow.com/questions/64239867/blazor-retrieve-relative-url -->
+            @if(NavigationManager.ToBaseRelativePath(NavigationManager.Uri) == ""){
                 <div class="relative">
                     <!-- (*NEWBYME*) adding @bind-value attribute to input tag, linking the input to SearchTerm-->
                     <input type="text" @bind-value="SearchService.SearchTerm" @bind-value:event="oninput" placeholder="Search..." class="bg-gray-700 text-white px-4 py-2 rounded-full focus:outline-none">
