@@ -32,7 +32,24 @@ namespace music_manager_starter.Server.Controllers
                 return BadRequest("Song cannot be null.");
             }
 
+            //(*NEWBYME*) checking for duplicate songs (matching Title, Artist, Album, and Genre)
+            //Help from: https://learn.microsoft.com/en-us/answers/questions/1403250/avoiding-duplicate-inserts-with-entity-framework
+            string title = song.Title.ToLower();
+            string artist = song.Artist.ToLower();
+            string album = song.Album.ToLower();
+            string genre = song.Genre.ToLower();
 
+            var existingRecord = await _context.Songs.FirstOrDefaultAsync(s => 
+                s.Title.ToLower() == title &&
+                s.Artist.ToLower() == artist &&
+                s.Album.ToLower() == album &&
+                s.Genre.ToLower() == genre);
+
+            if(existingRecord != null){
+                return Conflict("A song with this Title, Artist, Album, and Genre already exists.");
+            }
+            
+            //at this point, the Song to add is valid
             _context.Songs.Add(song);
             await _context.SaveChangesAsync();
 

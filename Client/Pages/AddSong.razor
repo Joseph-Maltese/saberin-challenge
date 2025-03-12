@@ -99,6 +99,10 @@
             //(*NEWBYME*) clearing the image preview after adding song
             imageUrl = string.Empty;
         }
+        //(*NEWBYME*) setting 'message' properly in the case of adding a duplicate song
+        else if(response.StatusCode == System.Net.HttpStatusCode.Conflict){
+            message = "This song already exists";
+        }
         else
         {
             message = "Error adding song. Please try again.";
