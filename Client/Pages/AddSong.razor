@@ -5,9 +5,14 @@
 
 <div class="p-6">
     <h2 class="text-xl font-semibold text-white">Add New Song</h2>
-    <EditForm Model="newSong" OnValidSubmit="HandleValidSubmit">
+    <!-- (*NEWBYME*) adding OnInvalidSubmit="HandleInvalidSubmit" (callback) to EditForm component
+    Info about OnInvalidSubmit from: https://learn.microsoft.com/en-us/aspnet/core/blazor/forms/?view=aspnetcore-9.0 -->
+    <EditForm Model="newSong" OnValidSubmit="HandleValidSubmit" OnInvalidSubmit="HandleInvalidSubmit">
         <DataAnnotationsValidator />
-        <ValidationSummary />
+        <!-- (*NEWBYME*) removing ValidationSummary, so errors picked up by not entering field data
+        (Title, Artist etc.) will not show (instead, when user enters invalid form info, a single
+        message will display at the bottom; message set by HandleInvalidSubmit)
+        <ValidationSummary /> -->
 
         <div class="mb-4">
             <label class="block text-gray-200">Title</label>
@@ -98,5 +103,11 @@
         {
             message = "Error adding song. Please try again.";
         }
+    }
+
+    /*(*NEWBYME*) adding HandleInvalidSubmit function. Gets called when user enters invalid values for
+    Song 'Title', 'Artist', 'Album', and 'Genre'. Those fields are required and cannot be whitespace */
+    private void HandleInvalidSubmit(){
+        message = "Please enter Title, Artist, Album, and Genre";
     }
 }
